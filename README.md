@@ -290,6 +290,44 @@ kill -9 <PID>
 3. Check network connection
 4. Look for errors in browser console
 
+### AWS Credentials Won't Save
+
+If you get an error when trying to save AWS credentials:
+
+1. **Rebuild native modules** (keytar):
+   ```bash
+   npm rebuild keytar
+   ```
+
+2. **Check keytar installation**:
+   ```bash
+   node -e "const keytar = require('keytar'); console.log('keytar OK');"
+   ```
+
+3. **macOS Keychain Access**:
+   - Open "Keychain Access" app
+   - Check if you have permission to add items
+   - Look for "blog-writing-assistant" entries
+
+4. **Reinstall dependencies**:
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+5. **Check server logs** for detailed error messages:
+   - Look for "Failed to save credentials" messages
+   - Check the error details in the console
+
+6. **Alternative: Use environment variables** (temporary workaround):
+   ```bash
+   export AWS_ACCESS_KEY_ID=your-key
+   export AWS_SECRET_ACCESS_KEY=your-secret
+   export AWS_REGION=us-east-1
+   export AWS_BUCKET_NAME=your-bucket
+   npm run dev:server
+   ```
+
 ## 📚 Documentation
 
 - **Quick Start**: See `QUICKSTART.md` for detailed setup instructions

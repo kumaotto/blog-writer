@@ -165,17 +165,30 @@ export function createServer(config: ServerConfig = {}) {
     try {
       const { accessKeyId, secretAccessKey, region, bucketName } = req.body;
 
+      console.log('📥 Received config save request');
+      console.log('   Has accessKeyId:', !!accessKeyId);
+      console.log('   Has secretAccessKey:', !!secretAccessKey);
+      console.log('   Region:', region);
+      console.log('   Bucket:', bucketName);
+
       if (!accessKeyId || !secretAccessKey || !region || !bucketName) {
+        console.log('❌ Missing required fields');
         return res.status(400).json({ error: 'All AWS credentials are required' });
       }
 
       const credentials = { accessKeyId, secretAccessKey, region, bucketName };
 
       await configService.saveConfig(credentials);
+      console.log('✅ Configuration saved successfully');
       res.json({ success: true, message: 'Configuration saved successfully' });
     } catch (error) {
-      console.error('Error saving configuration:', error);
-      res.status(500).json({ error: 'Failed to save configuration' });
+      console.error('❌ Error saving configuration:', error);
+      console.error('   Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('   Error message:', error instanceof Error ? error.message : String(error));
+      res.status(500).json({ 
+        error: 'Failed to save configuration',
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
