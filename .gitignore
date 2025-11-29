@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Temporary files
+*.tmp
+.cache/
+
+# SSL Certificates (if generated locally)
+*.pem
+*.key
+*.crt
+*.cert
+
+# AWS Credentials (should never be committed)
+credentials
+config
+.aws/
+
+# Local data
+uploads/
+images/

@@ -1,0 +1,126 @@
+.qr-code-display {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.qr-code-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.qr-code-header h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.qr-code-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.qr-code-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.qr-code-container.expired {
+  opacity: 0.5;
+}
+
+.qr-code-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.qr-code-placeholder {
+  color: #999;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.qr-code-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(239, 68, 68, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expired-label {
+  color: white;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.qr-code-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.token-expiry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.expiry-label {
+  color: #666;
+}
+
+.expiry-time {
+  font-weight: 600;
+  color: #333;
+  font-family: 'Courier New', monospace;
+}
+
+.token-expiry.expired .expiry-time {
+  color: #ef4444;
+}
+
+.btn-regenerate {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-regenerate:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-regenerate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.qr-code-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  text-align: center;
+}

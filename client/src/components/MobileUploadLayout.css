@@ -1,0 +1,151 @@
+.mobile-upload-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mobile-header {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.status-indicator.connected {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.status-indicator.disconnected {
+  background: #ef4444;
+}
+
+.mobile-content {
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Authentication states */
+.mobile-auth-loading,
+.mobile-auth-error,
+.mobile-not-authenticated,
+.mobile-no-articles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 2rem;
+  text-align: center;
+  color: white;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mobile-auth-loading p,
+.mobile-not-authenticated p,
+.mobile-no-articles p {
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  opacity: 0.9;
+}
+
+.mobile-auth-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem;
+}
+
+.error-icon,
+.info-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.mobile-auth-error h2,
+.mobile-not-authenticated h2,
+.mobile-no-articles h2 {
+  margin: 0.5rem 0;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.mobile-auth-error p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0.5rem 0;
+}
+
+.error-instructions {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.error-instructions p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .mobile-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .mobile-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .mobile-content {
+    padding: 1rem;
+  }
+
+  .connection-status {
+    font-size: 0.75rem;
+  }
+}

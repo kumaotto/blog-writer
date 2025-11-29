@@ -1,0 +1,131 @@
+.article-tab-bar {
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tabs-container {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  gap: 2px;
+  padding: 4px 8px;
+}
+
+.article-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #e0e0e0;
+  border: 1px solid #ccc;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  min-width: 120px;
+  max-width: 200px;
+  position: relative;
+}
+
+.article-tab:hover {
+  background-color: #d0d0d0;
+}
+
+.article-tab.active {
+  background-color: #fff;
+  border-bottom-color: #fff;
+  font-weight: 500;
+}
+
+.article-tab.dirty .tab-title {
+  font-style: italic;
+}
+
+.tab-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dirty-indicator {
+  color: #ff6b6b;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.tab-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.tab-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.tab-close-btn:active {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.new-tab-btn {
+  background-color: transparent;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.new-tab-btn:hover {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.new-tab-btn:active {
+  background-color: #d0d0d0;
+}
+
+/* Scrollbar styling for tab bar */
+.article-tab-bar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.article-tab-bar::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.article-tab-bar::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.article-tab-bar::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
