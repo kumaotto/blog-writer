@@ -2,61 +2,67 @@
 
 ## Overview
 
-ngrok allows you to expose your local blog writing assistant to the internet securely. This is perfect for:
-- ✅ Using on large WiFi networks (cafes, airports, offices with 100k+ users)
-- ✅ Accessing from anywhere (not just local network)
-- ✅ Avoiding IP address conflicts
-- ✅ Each user gets a unique URL
+The Blog Writing Assistant **automatically uses ngrok** for external access. When you start the server, it will:
+- ✅ Automatically detect if PUBLIC_URL is not set
+- ✅ Start ngrok tunnel on port 3001
+- ✅ Configure QR codes with ngrok URL
+- ✅ Work on any network (home, office, public WiFi)
+- ✅ Accessible from anywhere via HTTPS
+
+**No manual configuration needed!** Just install ngrok and start the server.
 
 ## Prerequisites
 
-1. **Install ngrok**
-   ```bash
-   # macOS
-   brew install ngrok
-   
-   # Or download from https://ngrok.com/download
-   ```
+**Install ngrok** (required):
+```bash
+# macOS
+brew install ngrok
 
-2. **Sign up for ngrok** (optional but recommended)
-   - Visit https://dashboard.ngrok.com/signup
-   - Get your auth token
-   - Run: `ngrok config add-authtoken YOUR_TOKEN`
+# Or download from https://ngrok.com/download
+```
+
+**Optional: Sign up for ngrok** (for persistent URLs):
+- Visit https://dashboard.ngrok.com/signup
+- Get your auth token
+- Run: `ngrok config add-authtoken YOUR_TOKEN`
 
 ## Quick Start
 
-### Option 1: Automatic Setup (Recommended)
+### Automatic Mode (Default)
+
+Simply start the server:
 
 ```bash
-./start-ngrok.sh
+npm run dev:server
 ```
 
-This script will:
-1. Build the application
-2. Start the server
-3. Create an ngrok tunnel
-4. Display your public URL
-5. Automatically configure the QR code
+The server will:
+1. ✅ Check if ngrok is installed
+2. ✅ Automatically start ngrok tunnel
+3. ✅ Retrieve the public URL
+4. ✅ Configure QR codes
+5. ✅ Display the ngrok URL in logs
 
-### Option 2: Manual Setup
+**Example output:**
+```
+🚀 Starting Blog Writing Assistant Server
+📡 PUBLIC_URL not set, starting ngrok automatically...
+📡 Starting ngrok tunnel on port 3001...
+✅ ngrok tunnel established: https://abc123.ngrok.io
+📱 Server will use ngrok URL for QR codes and external access
+```
 
-1. **Start the application**
-   ```bash
-   npm run build
-   node dist/server/server.js
-   ```
+### Manual Mode (Custom Configuration)
 
-2. **In a new terminal, start ngrok**
-   ```bash
-   ngrok http 3000
-   ```
+If you want to use your own ngrok configuration:
 
-3. **Copy the ngrok URL** (e.g., `https://abc123.ngrok.io`)
+```bash
+# Terminal 1: Start ngrok with custom settings
+ngrok http 3001 --domain=your-custom-domain.ngrok.io
 
-4. **Restart the server with PUBLIC_URL**
-   ```bash
-   PUBLIC_URL=https://abc123.ngrok.io node dist/server/server.js
-   ```
+# Terminal 2: Start server with custom URL
+PUBLIC_URL=https://your-custom-domain.ngrok.io npm run dev:server
+```
 
 ## Usage
 
@@ -89,26 +95,63 @@ This script will:
 
 ## Troubleshooting
 
-### ngrok not found
+### ngrok not installed
+
+**Error message:**
+```
+❌ ngrok is not installed. Please install it:
+   brew install ngrok  # macOS
+   or visit: https://ngrok.com/download
+```
+
+**Solution:**
 ```bash
-# Install ngrok
+# macOS
 brew install ngrok
 
 # Or download from https://ngrok.com/download
 ```
 
-### Connection refused
-- Make sure the server is running on port 3000
-- Check `ngrok http 3000` is pointing to the correct port
+### ngrok fails to start
 
-### QR code shows localhost
-- Make sure PUBLIC_URL environment variable is set
-- Restart the server after setting PUBLIC_URL
+**Possible causes:**
+1. Port 3001 is already in use
+2. ngrok API (port 4040) is blocked
+3. Network firewall blocking ngrok
 
-### ngrok URL changes
-- Free ngrok URLs are temporary
+**Solutions:**
+```bash
+# Check if port 3001 is in use
+lsof -i :3001
+
+# Kill the process if needed
+kill -9 <PID>
+
+# Check ngrok logs
+# The server will show detailed error messages
+```
+
+### QR code shows localhost instead of ngrok URL
+
+**This should not happen with automatic mode**, but if it does:
+1. Check server logs for ngrok startup errors
+2. Verify ngrok is installed: `ngrok version`
+3. Restart the server
+4. Check if PUBLIC_URL is being set correctly
+
+### ngrok URL changes on restart
+
+**This is normal for free ngrok accounts:**
+- Free ngrok URLs are temporary and change on restart
 - Upgrade to ngrok paid plan for permanent URLs
-- Or use a custom domain
+- Or use a custom domain with paid plan
+
+### Server takes long to start
+
+**Normal behavior:**
+- ngrok startup adds 2-3 seconds to server startup
+- The server waits for ngrok API to be available
+- You'll see progress messages in the logs
 
 ## Advanced Configuration
 
@@ -155,8 +198,14 @@ For production, consider:
 
 ## FAQ
 
-**Q: Do I need ngrok for local use?**
-A: No, if you're on a small home network, use `./start.sh` instead.
+**Q: Do I need to manually start ngrok?**
+A: No! The server automatically starts ngrok when PUBLIC_URL is not set.
+
+**Q: Can I skip ngrok and use localhost only?**
+A: Yes, set PUBLIC_URL to your local address:
+```bash
+PUBLIC_URL=https://localhost:3001 npm run dev:server
+```
 
 **Q: Is ngrok secure?**
 A: Yes, ngrok uses HTTPS encryption. Combined with our QR code authentication, it's very secure.
@@ -165,10 +214,23 @@ A: Yes, ngrok uses HTTPS encryption. Combined with our QR code authentication, i
 A: No, each person should run their own instance with their own ngrok URL.
 
 **Q: What happens if ngrok disconnects?**
-A: You'll need to restart ngrok and update the PUBLIC_URL.
+A: The server will continue running, but external access will be lost. Restart the server to get a new ngrok URL.
 
 **Q: Can I use this in production?**
 A: ngrok is great for development. For production, deploy to a proper hosting service.
+
+**Q: How do I use a persistent ngrok URL?**
+A: Upgrade to ngrok paid plan, then:
+```bash
+# Start ngrok manually with your domain
+ngrok http 3001 --domain=your-domain.ngrok.io
+
+# Start server with custom URL
+PUBLIC_URL=https://your-domain.ngrok.io npm run dev:server
+```
+
+**Q: Does ngrok work behind corporate firewalls?**
+A: Usually yes, but some strict firewalls may block it. Check with your IT department.
 
 ## Support
 

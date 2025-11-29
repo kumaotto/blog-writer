@@ -1,26 +1,49 @@
 import { createServer } from './server';
 import { startServer, shutdownServer } from './utils/serverUtils';
+import { NgrokManager } from './utils/NgrokManager';
 
-// Log PUBLIC_URL for debugging
-console.log('='.repeat(60));
-console.log('🚀 Starting Blog Writing Assistant Server');
-console.log('='.repeat(60));
-console.log('📝 PUBLIC_URL:', process.env.PUBLIC_URL || 'not set (will use localhost:3001)');
-console.log('='.repeat(60));
+// Main startup function
+async function main() {
+  try {
+    console.log('='.repeat(60));
+    console.log('🚀 Starting Blog Writing Assistant Server');
+    console.log('='.repeat(60));
 
-// Create server instance
-const { server, port, authService, configService, s3Service, io } = createServer({ port: 3001 });
+    // Ensure ngrok is running (auto-start if PUBLIC_URL not set)
+    await NgrokManager.ensureNgrokRunning(3001);
 
-// Start server
-startServer(server, port, configService, s3Service).catch((error) => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
-});
+    // Log final PUBLIC_URL
+    console.log('📝 PUBLIC_URL:', process.env.PUBLIC_URL || 'not set');
+    console.log('='.repeat(60));
+
+    // Create server instance
+    const { server, port, authService, configService, s3Service, io } = createServer({ port: 3001 });
+
+    // Store server components for shutdown
+    global.serverComponents = { server, io, authService };
+
+    // Start server
+    await startServer(server, port, configService, s3Service);
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+main();
 
 // Graceful shutdown handler
 const shutdown = async () => {
   try {
-    await shutdownServer(server, io, authService);
+    // Stop ngrok first
+    await NgrokManager.stop();
+
+    // Then shutdown server
+    const { server, io, authService } = global.serverComponents || {};
+    if (server && io && authService) {
+      await shutdownServer(server, io, authService);
+    }
     process.exit(0);
   } catch (error) {
     console.error('Error during shutdown:', error);

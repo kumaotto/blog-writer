@@ -53,6 +53,9 @@ npm run dev:client
 
 - Node.js v18 or higher
 - npm or yarn
+- **ngrok** (automatically used for external access)
+  - Install: `brew install ngrok` (macOS)
+  - Or visit: https://ngrok.com/download
 - **AWS S3 account** (required for image storage)
   - S3 Bucket (you need to create this first)
   - IAM User with Access Keys
@@ -79,22 +82,27 @@ You'll need:
 
 ### Step 2: Start the Application
 
-**Option A: Local Network (Home/Small Office)**
 ```bash
-./start.sh
+npm run dev:server
 ```
 
-**Option B: Public Internet Access (Large WiFi/Remote Access)**
+**🎉 Automatic ngrok Setup**
+
+The server automatically starts ngrok for external access when `PUBLIC_URL` is not set:
+- ✅ No manual configuration needed
+- ✅ Works on any network (home, office, public WiFi)
+- ✅ Accessible from anywhere via HTTPS
+- ✅ QR codes automatically use ngrok URL
+
+**Optional: Use Custom PUBLIC_URL**
+
+If you want to use your own ngrok configuration or alternative tunneling service:
+
 ```bash
-./start.sh --ngrok
+PUBLIC_URL=https://your-custom-url.ngrok.io npm run dev:server
 ```
 
-> 💡 Use ngrok mode if:
-> - You're on a large public WiFi (cafe, airport, office with 100k+ users)
-> - You want to access from anywhere (not just local network)
-> - You're experiencing IP address conflicts
->
-> See `NGROK_SETUP.md` for detailed setup instructions
+> 💡 **Note**: ngrok must be installed first. If not installed, you'll see clear installation instructions.
 
 ### Step 3: Configure AWS Credentials
 
@@ -236,10 +244,11 @@ If your phone and PC are on the same network:
 
 ### Different Network
 
-For remote access, you'll need to:
-1. Set up port forwarding on your router
-2. Use a VPN or tunneling service (ngrok, cloudflare tunnel)
-3. Deploy to a cloud server
+The server automatically uses ngrok for remote access, so you can access from anywhere:
+- ✅ Automatic HTTPS tunnel
+- ✅ No router configuration needed
+- ✅ Works behind firewalls
+- ✅ QR codes include ngrok URL
 
 ## 🐛 Troubleshooting
 
@@ -266,6 +275,13 @@ kill -9 <PID>
 2. Increase screen brightness
 3. Ensure camera has permission
 4. Try a different QR code scanner app
+
+### ngrok Not Starting
+
+1. Check if ngrok is installed: `ngrok version`
+2. Install if missing: `brew install ngrok` (macOS)
+3. Check if port 3001 is available
+4. Look for error messages in server logs
 
 ### Images Not Uploading
 
