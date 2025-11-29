@@ -48,11 +48,13 @@
 1. WHEN ユーザーがActive Article内でマークダウンテキストを入力する、THEN THE System SHALL 入力内容をリアルタイムでHTMLプレビューに反映する
 2. WHEN ユーザーがActive Articleに画像ファイルをドラッグ&ドロップする、THEN THE System SHALL その画像をS3にアップロードし、マークダウン形式の画像タグをドロップ位置に挿入する
 3. WHEN ユーザーが既存のMarkdown Fileを開く操作を実行する、THEN THE System SHALL PC内のファイルシステムからファイルを読み込み、新しいArticle Tabを作成してEditorに内容を表示する
-4. WHEN ユーザーがActive Articleで編集中のMarkdown Fileを保存する、THEN THE System SHALL PC内のファイルシステムに変更内容を書き込む
+4. WHEN ユーザーが任意のArticle Tabの保存ボタンを押下する、THEN THE System SHALL その記事のMarkdown FileをPC内のファイルシステムに書き込む
 5. WHEN ユーザーが新規Markdown Fileを作成する、THEN THE System SHALL 空のArticle Tabを作成し、保存時にファイル名を指定できるようにする
 6. WHEN ユーザーがArticle Tabをクリックする、THEN THE System SHALL そのタブをActive Articleに切り替える
 7. WHEN ユーザーがArticle Tabの閉じるボタンを押下する、THEN THE System SHALL 未保存の変更がある場合は確認ダイアログを表示し、タブを閉じる
-8. WHEN 複数のArticle Tabが開かれている、THEN THE System SHALL 各タブにファイル名とArticle IDを表示する
+8. WHEN 複数のArticle Tabが開かれている、THEN THE System SHALL 各タブに記事タイトル、Article ID、および保存ボタンを表示する
+9. WHEN Article Tabに未保存の変更がある、THEN THE System SHALL そのタブに視覚的なインジケーター（例：タイトルの横にドット）を表示する
+10. WHEN ユーザーがArticle Tabの保存ボタンを押下し、ファイルパスが未設定の場合、THEN THE System SHALL ファイル名入力ダイアログを表示する
 
 ### Requirement 3
 

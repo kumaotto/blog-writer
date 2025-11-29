@@ -41,7 +41,7 @@ export function createServer(config: ServerConfig = {}) {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   app.use(cookieParser());
 
-  // CORS configuration - only allow localhost
+  // CORS configuration - allow localhost and ngrok
   app.use(
     cors({
       origin: (origin, callback) => {
@@ -54,11 +54,16 @@ export function createServer(config: ServerConfig = {}) {
         const localhostPattern = /^https?:\/\/localhost(:\d+)?$/;
         const localhostIPPattern = /^https?:\/\/127\.0\.0\.1(:\d+)?$/;
         const localNetworkPattern = /^https?:\/\/192\.168\.\d+\.\d+(:\d+)?$/;
+        // Allow ngrok URLs
+        const ngrokPattern = /^https?:\/\/[a-z0-9]+\.ngrok(-free)?\.app$/;
+        const ngrokIOPattern = /^https?:\/\/[a-z0-9]+\.ngrok\.io$/;
 
         if (
           localhostPattern.test(origin) ||
           localhostIPPattern.test(origin) ||
-          localNetworkPattern.test(origin)
+          localNetworkPattern.test(origin) ||
+          ngrokPattern.test(origin) ||
+          ngrokIOPattern.test(origin)
         ) {
           callback(null, true);
         } else {
@@ -109,7 +114,9 @@ export function createServer(config: ServerConfig = {}) {
 
       if (!result) {
         console.log('[AUTH] ERROR: Token validation failed for:', qrToken);
-        return res.status(401).json({ error: 'Invalid or expired QR token' });
+        return res.status(401).json({ 
+          error: 'Invalid or expired QR token. Please scan a new QR code from your PC.' 
+        });
       }
 
       console.log('[AUTH] SUCCESS: Session token issued:', result.sessionToken);
@@ -138,8 +145,10 @@ export function createServer(config: ServerConfig = {}) {
   app.get('/api/auth/qr-code', qrCodeLimiter.middleware(), async (_req: Request, res: Response) => {
     try {
       const { token, qrCodeDataURL } = await authService.regenerateQRCodeAsync();
+      const baseUrl = process.env.PUBLIC_URL || 'https://localhost:3001';
       console.log('[AUTH] QR Code generated with token:', token);
-      console.log('[AUTH] QR Code URL: https://localhost:3000/mobile?token=' + token);
+      console.log('[AUTH] QR Code URL:', `${baseUrl}/mobile?token=${token}`);
+      console.log('[AUTH] PUBLIC_URL:', process.env.PUBLIC_URL || 'not set');
       res.json({ token, qrCodeDataURL });
     } catch (error) {
       console.error('Error generating QR code:', error);
@@ -372,13 +381,14 @@ export function createServer(config: ServerConfig = {}) {
    */
   app.post('/api/files', async (req: Request, res: Response) => {
     try {
-      const { path, content } = req.body;
+      const { path, filePath, content } = req.body;
+      const targetPath = filePath || path; // Support both 'filePath' and 'path' for backwards compatibility
 
-      if (!path || content === undefined) {
+      if (!targetPath || content === undefined) {
         return res.status(400).json({ error: 'Path and content are required' });
       }
 
-      await fileService.saveFile(path, content);
+      await fileService.saveFile(targetPath, content);
       res.json({ success: true, message: 'File saved successfully' });
     } catch (error) {
       console.error('Error saving file:', error);

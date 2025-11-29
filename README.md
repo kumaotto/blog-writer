@@ -79,9 +79,22 @@ You'll need:
 
 ### Step 2: Start the Application
 
+**Option A: Local Network (Home/Small Office)**
 ```bash
 ./start.sh
 ```
+
+**Option B: Public Internet Access (Large WiFi/Remote Access)**
+```bash
+./start.sh --ngrok
+```
+
+> 💡 Use ngrok mode if:
+> - You're on a large public WiFi (cafe, airport, office with 100k+ users)
+> - You want to access from anywhere (not just local network)
+> - You're experiencing IP address conflicts
+>
+> See `NGROK_SETUP.md` for detailed setup instructions
 
 ### Step 3: Configure AWS Credentials
 

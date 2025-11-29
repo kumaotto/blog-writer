@@ -77,7 +77,8 @@ export function useAuth() {
       });
 
       if (!response.ok) {
-        throw new Error('Invalid or expired QR token');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Invalid or expired QR token');
       }
 
       const data = await response.json();

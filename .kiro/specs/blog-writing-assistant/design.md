@@ -111,7 +111,7 @@ interface AuthService {
   // セッショントークン検証
   validateSessionToken(sessionToken: string): boolean;
   
-  // セッショントークン延長
+  // セッショントークン延長 (画像アップロード等の操作時に自動延長)
   extendSessionToken(sessionToken: string): void;
   
   // QRトークン無効化
@@ -210,7 +210,7 @@ interface WebSocketService {
 
 ##### 1. EditorLayout
 
-**責任**: 全体レイアウト、タブ管理
+**責任**: 全体レイアウト、タブ管理、記事保存
 
 ```typescript
 interface EditorLayoutProps {}
@@ -219,12 +219,19 @@ interface EditorLayoutState {
   articles: Article[];
   activeArticleId: string | null;
   qrCodeDataURL: string;
+  savingArticleIds: Set<string>; // 現在保存中の記事ID
 }
+
+// 保存機能:
+// - 各記事ごとに独立した保存ボタン
+// - 保存中は該当タブの保存ボタンにローディング表示
+// - 自動保存は5秒間の編集停止後に実行（アクティブな記事のみ）
+// - 保存成功時は一時的に成功インジケーターを表示
 ```
 
 ##### 2. ArticleTabBar
 
-**責任**: タブ表示・切り替え・閉じる
+**責任**: タブ表示・切り替え・閉じる・保存
 
 ```typescript
 interface ArticleTabBarProps {
@@ -232,26 +239,38 @@ interface ArticleTabBarProps {
   activeArticleId: string | null;
   onTabClick: (articleId: string) => void;
   onTabClose: (articleId: string) => void;
+  onTabSave: (articleId: string) => void;
   onNewTab: () => void;
 }
+
+// 各タブには以下を表示:
+// - 記事タイトル (article.title)
+// - 未保存インジケーター (isDirtyの場合、タイトル横にドット表示)
+// - 保存ボタン (フロッピーディスクアイコン)
+// - 閉じるボタン (×アイコン)
+// 
+// タイトル表示ルール:
+// - article.titleが設定されている場合: そのまま表示
+// - article.titleが空または"Untitled"の場合: "Untitled"と表示
+// - タイトルが長い場合: 最大20文字で切り詰め、末尾に"..."を追加
 ```
 
 ##### 3. MarkdownEditor
 
-**責任**: CodeMirror統合、マークダウン編集、自動保存、LocalStorageバックアップ
+**責任**: CodeMirror統合、マークダウン編集、LocalStorageバックアップ
 
 ```typescript
 interface MarkdownEditorProps {
   articleId: string;
   content: string;
   onChange: (content: string) => void;
-  onSave: () => void;
   onImageDrop: (file: File) => void;
 }
 
-// 自動保存: 5秒間操作なしで自動保存
+// 自動保存: EditorLayoutで管理（5秒間操作なしで自動保存、アクティブな記事のみ）
 // LocalStorageバックアップ: 編集内容を自動的にLocalStorageに保存
 // 復元機能: ブラウザクラッシュ後の起動時にバックアップから復元を提案
+// 注: onSaveは削除（保存はタブバーのボタンから実行）
 ```
 
 ##### 4. MarkdownPreview
@@ -469,20 +488,80 @@ class ErrorHandler {
 
 ## Testing Strategy
 
+### TDD (Test-Driven Development) - 必須
+
+**全ての新機能・バグ修正はTDDで実装すること**
+
+#### TDD原則
+
+1. **Red**: テストを先に書く（失敗することを確認）
+2. **Green**: 最小限のコードでテストを通す
+3. **Refactor**: コードをリファクタリング（テストは通ったまま）
+
+#### TDD適用範囲
+
+- **新機能開発**: 必ずテストを先に書く
+- **バグ修正**: バグを再現するテストを先に書く
+- **リファクタリング**: 既存テストが通ることを確認してから実施
+- **コードレビュー**: テストがない変更は却下
+
+#### テストカバレッジ目標
+
+- **ユニットテスト**: 80%以上
+- **統合テスト**: 主要フロー100%
+- **E2Eテスト**: クリティカルパス100%
+
 ### Unit Tests
 
-#### Backend
+#### Backend (必須)
 
 - **AuthService**: トークン生成・検証・期限切れロジック
+  - QRトークン生成・検証
+  - セッショントークン発行・検証
+  - トークン期限切れ処理
+  - トークン無効化
 - **S3Service**: AWS SDK モック、アップロード・削除ロジック
+  - 画像アップロード成功/失敗
+  - 画像削除
+  - 画像一覧取得
+  - 接続テスト
 - **FileService**: ファイル読み書きロジック
+  - ファイル読み込み
+  - ファイル保存
+  - エラーハンドリング
 - **ConfigService**: 暗号化・復号化ロジック
+  - 設定保存・読み込み
+  - keychain統合
+  - 設定削除
+- **WebSocketService**: リアルタイム通信
+  - 接続管理
+  - イベント送信
+  - エラーハンドリング（EPIPE、ECONNRESET等）
 
-#### Frontend
+#### Frontend (必須)
 
 - **MarkdownEditor**: CodeMirror統合、画像ドロップ処理
+  - テキスト編集
+  - 画像ドロップ
+  - 自動保存
 - **MarkdownPreview**: マークダウンパース、HTMLレンダリング
+  - マークダウン→HTML変換
+  - サニタイゼーション
 - **ArticleTabBar**: タブ切り替え、閉じる処理
+  - タブ作成・削除
+  - タブ切り替え
+  - 未保存警告
+- **QRCodeDisplay**: QRコード表示
+  - QRコード表示
+  - タイマーカウントダウン
+  - 再生成機能
+- **QRCodeModal**: モーダル表示
+  - 開閉動作
+  - Props渡し
+- **EditorLayout**: 全体統合
+  - コンポーネント統合
+  - 状態管理
+  - Props変換
 
 ### Integration Tests
 
@@ -502,12 +581,35 @@ class ErrorHandler {
 - **ネットワークテスト**: 大規模Wi-Fi環境でのセキュリティ確認
 - **WordPress連携**: Jetpack Markdownでの表示確認
 
+### テスト実行
+
+```bash
+# 全テスト実行
+npm test
+
+# ユニットテストのみ
+npm test -- --testPathPattern="__tests__"
+
+# カバレッジレポート
+npm test -- --coverage
+
+# ウォッチモード（開発中）
+npm test -- --watch
+```
+
+### テストツール
+
+- **Jest**: テストフレームワーク
+- **React Testing Library**: Reactコンポーネントテスト
+- **Supertest**: HTTPエンドポイントテスト
+- **Socket.IO Client**: WebSocketテスト
+
 ## Security Considerations
 
 ### 1. トークン管理
 
-- QRトークン: 5分有効、使い捨て
-- セッショントークン: 1時間有効、延長なし（期限切れ後は再スキャン）
+- QRトークン: 10分有効、使い捨て
+- セッショントークン: 24時間有効、操作時に自動延長
 - トークン保存: メモリ内のみ（永続化しない）
 - トークン形式: UUID v4 (128-bit ランダム)
 - サーバー再起動: 全トークン無効化（セッション単位）

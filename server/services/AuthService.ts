@@ -144,9 +144,10 @@ export class AuthService {
     // Generate new QR token
     const { token } = this.generateQRToken();
 
-    // Generate QR code data URL (use port 3000 for Vite dev server)
-    const url = `https://localhost:3000/mobile?token=${token}`;
-    const qrCodeDataURL = await QRCode.toDataURL(url, { errorCorrectionLevel: 'M', width: 300 });
+    // Get base URL from environment or use localhost
+    const baseUrl = this.getBaseUrl();
+    const url = `${baseUrl}/mobile?token=${token}`;
+    const qrCodeDataURL = await QRCode.toDataURL(url, { errorCorrectionLevel: 'M', width: 800, margin: 2 });
 
     return { token, qrCodeDataURL };
   }
@@ -165,10 +166,39 @@ export class AuthService {
     // Generate new QR token
     const { token } = this.generateQRToken();
 
-    // Generate placeholder QR code data URL for synchronous use
-    const qrCodeDataURL = 'data:image/png;base64,placeholder';
+    // Get base URL from environment or use localhost
+    const baseUrl = this.getBaseUrl();
+    const url = `${baseUrl}/mobile?token=${token}`;
+    
+    // Generate QR code (this method is actually async, but we'll use a placeholder for sync)
+    // In practice, use regenerateQRCodeAsync() instead
+    const qrCodeDataURL = `data:image/png;base64,${Buffer.from(url).toString('base64')}`;
 
     return { token, qrCodeDataURL };
+  }
+
+  /**
+   * Get base URL for QR code generation
+   * Supports ngrok URLs via PUBLIC_URL environment variable
+   */
+  private getBaseUrl(): string {
+    const publicUrl = process.env.PUBLIC_URL;
+    
+    // If PUBLIC_URL is set and not empty, use it
+    if (publicUrl && publicUrl.trim()) {
+      // Remove trailing slash if present
+      let url = publicUrl.trim().replace(/\/$/, '');
+      
+      // Add https:// if no protocol specified
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = `https://${url}`;
+      }
+      
+      return url;
+    }
+    
+    // Default to localhost with correct port
+    return 'https://localhost:3001';
   }
 
   /**

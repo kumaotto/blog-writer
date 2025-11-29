@@ -3,6 +3,7 @@ export { ArticleTabBar } from './ArticleTabBar';
 export { MarkdownEditor } from './MarkdownEditor';
 export { MarkdownPreview } from './MarkdownPreview';
 export { QRCodeDisplay } from './QRCodeDisplay';
+export { QRCodeModal } from './QRCodeModal';
 export { ImageGallery } from './ImageGallery';
 export { ConfigModal } from './ConfigModal';
 export { MobileUploadLayout } from './MobileUploadLayout';

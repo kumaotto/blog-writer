@@ -1,8 +1,10 @@
 .qr-code-display {
-  background: white;
+  background: transparent;
   border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  box-shadow: none;
+  max-width: 450px;
+  margin: 0 auto;
 }
 
 .qr-code-header {
@@ -24,15 +26,16 @@
 
 .qr-code-container {
   position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 1rem;
+  width: 350px;
+  height: 350px;
+  margin: 0 auto 1.5rem;
   background: #f9fafb;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  padding: 1rem;
 }
 
 .qr-code-container.expired {
@@ -40,9 +43,12 @@
 }
 
 .qr-code-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover;
+  image-rendering: crisp-edges;
 }
 
 .qr-code-placeholder {

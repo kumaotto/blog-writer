@@ -9,12 +9,18 @@
   overflow: auto;
   border: 1px solid #ddd;
   border-radius: 4px;
+  background-color: #ffffff;
 }
 
 .markdown-editor .cm-editor {
   height: 100%;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 14px;
+  background-color: #ffffff;
+}
+
+.markdown-editor .cm-editor.cm-focused {
+  outline: none;
 }
 
 .markdown-editor .cm-scroller {
@@ -24,6 +30,7 @@
 .markdown-editor .cm-content {
   padding: 10px;
   min-height: 100%;
+  background-color: #ffffff;
 }
 
 .markdown-editor .cm-line {

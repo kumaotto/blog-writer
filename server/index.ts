@@ -1,6 +1,13 @@
 import { createServer } from './server';
 import { startServer, shutdownServer } from './utils/serverUtils';
 
+// Log PUBLIC_URL for debugging
+console.log('='.repeat(60));
+console.log('🚀 Starting Blog Writing Assistant Server');
+console.log('='.repeat(60));
+console.log('📝 PUBLIC_URL:', process.env.PUBLIC_URL || 'not set (will use localhost:3001)');
+console.log('='.repeat(60));
+
 // Create server instance
 const { server, port, authService, configService, s3Service, io } = createServer({ port: 3001 });
 

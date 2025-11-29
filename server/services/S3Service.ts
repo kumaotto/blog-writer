@@ -57,7 +57,7 @@ export class S3Service {
       const fileName = `${uuidv4()}.${extension}`;
       const key = `${year}/${month}/${day}/${fileName}`;
 
-      // Upload to S3
+      // Upload to S3 (public access controlled by bucket policy)
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key: key,

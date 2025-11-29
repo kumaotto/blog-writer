@@ -3,7 +3,7 @@ import { useArticles, useAuth, useWebSocket, useLocalStorageBackup, useErrorHand
 import { ArticleTabBar } from './ArticleTabBar';
 import { MarkdownEditor } from './MarkdownEditor';
 import { MarkdownPreview } from './MarkdownPreview';
-import { QRCodeDisplay } from './QRCodeDisplay';
+import { QRCodeModal } from './QRCodeModal';
 import { ImageGallery } from './ImageGallery';
 import { NetworkStatusIndicator } from './NetworkStatusIndicator';
 import { ErrorNotification } from './ErrorNotification';
@@ -30,10 +30,10 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
   const { errors, dismissError } = useErrorHandler();
 
   const { authState, generateQRCode, regenerateQRCode } = useAuth();
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const { loadBackups, clearBackups, getBackupTimestamp } = useLocalStorageBackup(articles);
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
   
   // Memoize WebSocket callbacks to prevent reconnection loops
   const handleWebSocketConnect = React.useCallback(() => {
@@ -147,14 +147,10 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
 
     const activeArticle = articles.find(a => a.id === activeArticleId);
     if (!activeArticle || !activeArticle.isDirty || !activeArticle.filePath) {
-      setSaveStatus('idle');
       return;
     }
 
-    setSaveStatus('idle');
-
     const timeoutId = setTimeout(async () => {
-      setSaveStatus('saving');
       try {
         const response = await fetch('/api/files', {
           method: 'POST',
@@ -169,17 +165,10 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
 
         if (response.ok) {
           markArticleSaved(activeArticleId);
-          setSaveStatus('saved');
           console.log('Auto-saved:', activeArticle.title);
-          
-          // Reset to idle after 2 seconds
-          setTimeout(() => setSaveStatus('idle'), 2000);
-        } else {
-          setSaveStatus('idle');
         }
       } catch (error) {
         console.error('Auto-save failed:', error);
-        setSaveStatus('idle');
       }
     }, 5000); // 5 seconds debounce
 
@@ -194,6 +183,11 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
       cursorPosition: 0,
     };
     addArticle(newArticle);
+    
+    // Show QR modal only when creating the first article
+    if (articles.length === 0) {
+      setShowQRModal(true);
+    }
   };
 
   const handleOpenFile = async () => {
@@ -267,28 +261,71 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
     setActiveArticle(articleId);
   };
 
-  const handleSaveFile = async () => {
-    if (!activeArticleId) return;
-    
-    const article = articles.find(a => a.id === activeArticleId);
+  const handleTabSave = React.useCallback(async (articleId: string) => {
+    const article = articles.find(a => a.id === articleId);
     if (!article) return;
 
     let filePath = article.filePath;
 
-    // If no file path, prompt user for save location
+    // If no file path, use browser's save dialog
     if (!filePath) {
-      const fileName = prompt('Enter filename (without extension):', article.title);
-      if (!fileName) return; // User cancelled
-      
-      filePath = `${fileName}.md`;
-      
-      // Update article with new file path and title
-      updateArticlePath(article.id, filePath);
-      updateArticleTitle(article.id, fileName);
+      try {
+        // Check if File System Access API is supported
+        if ('showSaveFilePicker' in window) {
+          // Use modern File System Access API
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: `${article.title || 'Untitled'}.md`,
+            types: [
+              {
+                description: 'Markdown Files',
+                accept: { 'text/markdown': ['.md'] },
+              },
+            ],
+          });
+          
+          // Write content to the selected file
+          const writable = await handle.createWritable();
+          await writable.write(article.content);
+          await writable.close();
+          
+          // Store the file handle for future saves
+          filePath = handle.name;
+          updateArticlePath(article.id, filePath);
+          updateArticleTitle(article.id, handle.name.replace(/\.md$/, ''));
+          markArticleSaved(article.id);
+          
+          console.log('Saved:', handle.name);
+          return; // Exit early, file already saved via File System Access API
+        } else {
+          // Fallback: prompt for filename and save to server
+          const fileName = prompt('Enter filename (without extension):', article.title);
+          if (!fileName) return; // User cancelled
+          
+          // Save to 'articles' directory in project root
+          filePath = `articles/${fileName}.md`;
+          
+          // Update article with new file path and title
+          updateArticlePath(article.id, filePath);
+          updateArticleTitle(article.id, fileName);
+        }
+      } catch (error) {
+        // User cancelled or error occurred
+        if ((error as Error).name === 'AbortError') {
+          console.log('Save cancelled by user');
+          return;
+        }
+        console.error('Error showing save dialog:', error);
+        
+        // Fallback to prompt
+        const fileName = prompt('Enter filename (without extension):', article.title);
+        if (!fileName) return;
+        
+        filePath = `articles/${fileName}.md`;
+        updateArticlePath(article.id, filePath);
+        updateArticleTitle(article.id, fileName);
+      }
     }
 
-    // Save file
-    setSaveStatus('saving');
     try {
       const response = await fetch('/api/files', {
         method: 'POST',
@@ -303,57 +340,36 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
 
       if (response.ok) {
         markArticleSaved(article.id);
-        setSaveStatus('saved');
         console.log('Saved:', article.title);
-        
-        // Show success notification
-        alert(`File saved successfully: ${filePath}`);
-        
-        // Reset to idle after 2 seconds
-        setTimeout(() => setSaveStatus('idle'), 2000);
       } else {
         throw new Error('Save failed');
       }
     } catch (error) {
       console.error('Save failed:', error);
       alert('Failed to save file. Please try again.');
-      setSaveStatus('idle');
     }
-  };
+  }, [articles, updateArticlePath, updateArticleTitle, markArticleSaved]);
 
-  const handleCopyMarkdown = async () => {
-    if (!activeArticleId) return;
+  // Keyboard shortcut for save (Cmd+S / Ctrl+S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd+S (Mac) or Ctrl+S (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault(); // Prevent browser's default save dialog
+        
+        if (activeArticleId) {
+          console.log('Save shortcut triggered for article:', activeArticleId);
+          handleTabSave(activeArticleId);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
     
-    const article = articles.find(a => a.id === activeArticleId);
-    if (!article) return;
-
-    try {
-      await navigator.clipboard.writeText(article.content);
-      alert('Markdown copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy markdown:', error);
-      alert('Failed to copy to clipboard. Please try again.');
-    }
-  };
-
-  const handleExportForWordPress = async () => {
-    if (!activeArticleId) return;
-    
-    const article = articles.find(a => a.id === activeArticleId);
-    if (!article) return;
-
-    try {
-      // Jetpack Markdown is compatible with standard markdown
-      // Just ensure proper formatting for WordPress
-      const exportContent = article.content;
-      
-      await navigator.clipboard.writeText(exportContent);
-      alert('Markdown exported to clipboard! Ready to paste into WordPress (Jetpack Markdown).');
-    } catch (error) {
-      console.error('Failed to export markdown:', error);
-      alert('Failed to export to clipboard. Please try again.');
-    }
-  };
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeArticleId, handleTabSave]);
 
   const activeArticle = articles.find(a => a.id === activeArticleId);
 
@@ -397,41 +413,16 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
             <button onClick={handleOpenFile} className="btn-secondary">
               Open File
             </button>
-            <button 
-              onClick={handleSaveFile} 
-              className="btn-primary"
-              disabled={!activeArticleId || !articles.find(a => a.id === activeArticleId)?.isDirty}
-            >
-              Save
-            </button>
-            <button 
-              onClick={handleCopyMarkdown}
-              className="btn-secondary"
-              disabled={!activeArticleId}
-              title="Copy markdown to clipboard"
-            >
-              Copy Markdown
-            </button>
-            <button 
-              onClick={handleExportForWordPress}
-              className="btn-secondary"
-              disabled={!activeArticleId}
-              title="Export for WordPress (Jetpack Markdown)"
-            >
-              Export to WordPress
-            </button>
-            <button onClick={onOpenSettings} className="btn-secondary">
-              Settings
-            </button>
             <button onClick={() => setShowGallery(!showGallery)} className="btn-secondary">
-              {showGallery ? 'Hide Gallery' : 'Show Gallery'}
+              S3 Images
             </button>
           </div>
         </div>
         <div className="header-right">
           <NetworkStatusIndicator />
-          {saveStatus === 'saving' && <span className="save-status">Saving...</span>}
-          {saveStatus === 'saved' && <span className="save-status saved">Saved</span>}
+          <button onClick={onOpenSettings} className="btn-secondary">
+            Settings
+          </button>
         </div>
       </div>
 
@@ -586,15 +577,14 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
 
         {/* Right Panel - Preview & QR Code */}
         <div className="preview-panel">
-          <div className="qr-section">
-            <QRCodeDisplay
-              qrCodeDataURL={authState.qrCodeDataURL}
-              onRegenerate={regenerateQRCode}
-            />
-            <div className="ws-status">
-              WebSocket: <span className={`status-${wsStatus}`}>{wsStatus}</span>
-            </div>
-          </div>
+          {/* Small QR button - non-intrusive */}
+          <button 
+            className="qr-toggle-btn"
+            onClick={() => setShowQRModal(true)}
+            title="Show QR Code for mobile connection"
+          >
+            QR Code
+          </button>
 
           {activeArticle && (
             <div className="preview-section">
@@ -603,12 +593,27 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({ onOpenSettings }) =>
             </div>
           )}
         </div>
+
+        {/* QR Code Modal */}
+        <QRCodeModal
+          isOpen={showQRModal}
+          onClose={() => setShowQRModal(false)}
+          authState={{
+            qrCode: authState.qrCodeDataURL,
+            tokenExpiresAt: authState.tokenExpiresAt,
+          }}
+          onRegenerate={regenerateQRCode}
+        />
       </div>
 
-      {/* Image Gallery Modal */}
+      {/* S3 Images Modal */}
       {showGallery && (
         <div className="gallery-overlay" onClick={() => setShowGallery(false)}>
           <div className="gallery-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="gallery-close" onClick={() => setShowGallery(false)} aria-label="Close">
+              ×
+            </button>
+            <h2 className="gallery-title">S3 Images</h2>
             <ImageGallery />
           </div>
         </div>

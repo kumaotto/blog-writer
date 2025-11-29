@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import './QRCodeDisplay.css';
 
 export interface QRCodeDisplayProps {
-  qrCodeDataURL: string | null;
-  onRegenerate: () => Promise<void>;
+  authState: {
+    qrCode: string | null;
+    tokenExpiresAt: Date | null;
+  };
+  onRegenerate: () => void;
 }
 
 export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
-  qrCodeDataURL,
+  authState,
   onRegenerate,
 }) => {
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -17,7 +20,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   // Reset timer when QR code changes
   useEffect(() => {
     setTimeRemaining(300); // Reset to 5 minutes
-  }, [qrCodeDataURL]);
+  }, [authState.qrCode]);
 
   // Countdown timer
   useEffect(() => {
@@ -34,14 +37,14 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [timeRemaining, qrCodeDataURL]);
+  }, [timeRemaining, authState.qrCode]);
 
-  const handleRegenerate = async () => {
+  const handleRegenerate = () => {
     setIsRegenerating(true);
     setError(null);
     
     try {
-      await onRegenerate();
+      onRegenerate();
       setTimeRemaining(300); // Reset timer
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to regenerate QR code');
@@ -68,10 +71,10 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
       </div>
 
       <div className={`qr-code-container ${isExpired ? 'expired' : ''}`}>
-        {qrCodeDataURL ? (
+        {authState.qrCode ? (
           <>
             <img 
-              src={qrCodeDataURL} 
+              src={authState.qrCode} 
               alt="QR Code for mobile access" 
               className="qr-code-image"
             />

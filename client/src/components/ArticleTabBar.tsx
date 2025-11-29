@@ -32,6 +32,12 @@ export const ArticleTabBar: React.FC<ArticleTabBarProps> = ({
     onTabClose(articleId);
   };
 
+  const truncateTitle = (title: string, maxLength: number = 20): string => {
+    if (!title || title === 'Untitled') return 'Untitled';
+    if (title.length <= maxLength) return title;
+    return title.substring(0, maxLength) + '...';
+  };
+
   return (
     <div className="article-tab-bar">
       <div className="tabs-container">
@@ -51,7 +57,7 @@ export const ArticleTabBar: React.FC<ArticleTabBarProps> = ({
             }}
           >
             <span className="tab-title">
-              {article.title || 'Untitled'}
+              {truncateTitle(article.title)}
               {article.isDirty && <span className="dirty-indicator" title="Unsaved changes">●</span>}
             </span>
             <button

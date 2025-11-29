@@ -34,8 +34,17 @@ The client will start on `https://localhost:5173` (or another port if 5173 is bu
 
 ### Access the Application
 
+**Local Network Mode (Default)**
 1. **PC Editor**: Open `https://localhost:5173` in your browser
 2. **Mobile Upload**: Open `https://localhost:5173/mobile` on your phone
+
+**Public Internet Mode (with ngrok)**
+```bash
+./start.sh --ngrok
+```
+- Access from anywhere using the displayed ngrok URL
+- Perfect for large public WiFi networks
+- See `NGROK_SETUP.md` for details
 
 **Note**: You'll see a security warning because we use self-signed certificates. Click "Advanced" and "Proceed" to continue.
 

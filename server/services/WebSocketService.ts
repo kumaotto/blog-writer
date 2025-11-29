@@ -49,6 +49,15 @@ export class WebSocketService {
     this.io.on('connection', (socket: Socket) => {
       console.log('[WebSocket] Client connected:', socket.id, 'authenticated:', socket.data.authenticated);
 
+      // Handle socket errors (including EPIPE)
+      socket.on('error', (error: any) => {
+        // Ignore EPIPE errors (broken pipe) - these are normal when clients disconnect
+        if (error.code === 'EPIPE' || error.errno === -32) {
+          return;
+        }
+        console.error('[WebSocket] Socket error:', socket.id, error.message);
+      });
+
       // Handle disconnect
       socket.on('disconnect', (reason) => {
         console.log('[WebSocket] Client disconnected:', socket.id, 'reason:', reason);
@@ -58,6 +67,21 @@ export class WebSocketService {
       socket.on('ping', () => {
         socket.emit('pong');
       });
+    });
+
+    // Handle server-level errors
+    this.io.engine.on('connection_error', (err: any) => {
+      // Ignore EPIPE, ECONNRESET, and Bad request errors (common during development)
+      if (
+        err.code === 'EPIPE' || 
+        err.code === 'ECONNRESET' || 
+        err.errno === -32 ||
+        err.message === 'Bad request' ||
+        err.code === 1
+      ) {
+        return;
+      }
+      console.error('[WebSocket] Connection error:', err.message);
     });
   }
 
