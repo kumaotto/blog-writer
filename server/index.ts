@@ -1,6 +1,18 @@
 import { createServer } from './server';
 import { startServer, shutdownServer } from './utils/serverUtils';
 import { NgrokManager } from './utils/NgrokManager';
+import { Server as HTTPSServer } from 'https';
+import { Server as SocketIOServer } from 'socket.io';
+import { AuthService } from './services/AuthService';
+
+// Extend global type for server components
+declare global {
+  var serverComponents: {
+    server: HTTPSServer;
+    io: SocketIOServer;
+    authService: AuthService;
+  } | undefined;
+}
 
 // Main startup function
 async function main() {
@@ -40,9 +52,9 @@ const shutdown = async () => {
     await NgrokManager.stop();
 
     // Then shutdown server
-    const { server, io, authService } = global.serverComponents || {};
-    if (server && io && authService) {
-      await shutdownServer(server, io, authService);
+    const components = global.serverComponents;
+    if (components) {
+      await shutdownServer(components.server, components.io, components.authService);
     }
     process.exit(0);
   } catch (error) {
